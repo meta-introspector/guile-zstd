@@ -22,7 +22,10 @@
   #:use-module (system foreign)
   #:use-module (ice-9 match)
   #:export (make-zstd-input-port
-            make-zstd-output-port))
+            call-with-zstd-input-port
+
+            make-zstd-output-port
+            call-with-zstd-output-port))
 
 ;;; Commentary:
 ;;;
@@ -151,6 +154,20 @@ resulting port is closed."
                                       (if checksum? 1 0))
   (make-custom-binary-output-port "zstd-output" write! #f #f close))
 
+(define* (call-with-zstd-output-port port proc
+                                     #:key
+                                     (level %default-compression-level))
+  "Call PROC with an output port that wraps PORT and compresses data.  PORT is
+closed upon completion."
+  (let ((zstd (make-zstd-output-port port
+                                     #:level level #:close? #t)))
+    (dynamic-wind
+      (const #t)
+      (lambda ()
+        (proc zstd))
+      (lambda ()
+        (close-port zstd)))))
+
 
 ;;;
 ;;; Decompression.
@@ -225,3 +242,14 @@ closed."
       (close-port port)))
 
   (make-custom-binary-input-port "zstd-input" read! #f #f close))
+
+(define* (call-with-zstd-input-port port proc)
+  "Call PROC with a port that wraps PORT and decompresses data read from it.
+PORT is closed upon completion."
+  (let ((zstd (make-zstd-input-port port #:close? #t)))
+    (dynamic-wind
+      (const #t)
+      (lambda ()
+        (proc zstd))
+      (lambda ()
+        (close-port zstd)))))
