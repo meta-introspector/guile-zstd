@@ -17,6 +17,7 @@
 ;;; along with Guile-zstd.  If not, see <http://www.gnu.org/licenses/>.
 
 (define-module (zstd)
+  #:use-module (zstd config)
   #:use-module (ice-9 binary-ports)
   #:use-module (rnrs bytevectors)
   #:use-module (system foreign)
@@ -32,9 +33,6 @@
 ;;; This module provides an interface to the zstd compression library.
 ;;;
 ;;; Code:
-
-(define %zstd-library-file-name
-  "/gnu/store/v04z33qas38iiv5ndasf4cw80kqyyr1r-zstd-1.4.4-lib/lib/libzstd.so.1")
 
 (define %zstd-library
   (dynamic-link %zstd-library-file-name))
