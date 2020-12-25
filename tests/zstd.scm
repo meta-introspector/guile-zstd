@@ -106,17 +106,18 @@
              (compress-and-decompress data #:level level))
            (iota 9 1))))
 
-(test-assert "truncated compressed stream"
+(test-equal "truncated compressed stream"
+  '(zstd-error decompress!)
   (let* ((compressed (compressed-data (random-bytevector 7777)))
-         (size       (pk 'size (- (bytevector-length compressed) 42)))
+         (size       (- (bytevector-length compressed) 142))
          (truncated  (make-bytevector size)))
     (bytevector-copy! compressed 0 truncated 0 size)
     (catch 'zstd-error
       (lambda ()
         (call-with-zstd-input-port (open-bytevector-input-port truncated)
           get-bytevector-all))
-      (lambda args
-        args))))
+      (lambda (key proc . _)
+        (list key proc)))))
 
 (test-equal "corrupt compressed stream"
   '(zstd-error decompress! "Restored data doesn't match checksum")

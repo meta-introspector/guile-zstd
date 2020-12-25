@@ -229,11 +229,14 @@ closed."
                                (list input-ptr input-size 0)))
 
   (define eof? #f)
+  (define expect-more? #f)
 
   (define (read! bv start count)
     (if (zero? input-available)
         (if eof?
-            0
+            (if expect-more?
+                (throw 'zstd-error 'decompress! 0) ;premature EOF
+                0)
             (begin
               (set! input-available
                 (match (get-bytevector-n! port input-buffer 0 input-size)
@@ -251,14 +254,13 @@ closed."
                (ret (decompress! context output input)))
           (when (error-code? ret)
             (throw 'zstd-error 'decompress! ret))
+          (set! expect-more? (not (zero? ret)))
           (match (parse-c-struct input %input-buffer-struct)
             ((_ size position)
-             (set! input-available (- size position))
-             (when (and eof? (zero? input-available) (not (zero? ret)))
-               (throw 'zstd-error 'decompress! "EOF before end of stream"))))
+             (set! input-available (- size position))))
           (match (parse-c-struct output %output-buffer-struct)
             ((_ _ position)
-             (if (and (not eof?) (zero? position)) ;didn't read anything
+             (if (zero? position)                 ;didn't write anything
                  (read! bv start count)
                  position))))))
 
