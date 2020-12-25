@@ -12,3 +12,4 @@
 /configure
 /pre-inst-env
 /zstd/config.scm
+/tests/*.trs

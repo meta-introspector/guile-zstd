@@ -40,7 +40,7 @@ SUFFIXES = .scm .go
 
 BUILT_SOURCES = zstd/config.scm
 
-TESTS =
+TESTS = tests/zstd.scm
 
 TEST_EXTENSIONS = .scm
 SCM_LOG_DRIVER =                                \

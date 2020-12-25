@@ -22,7 +22,9 @@
   #:use-module (rnrs bytevectors)
   #:use-module (system foreign)
   #:use-module (ice-9 match)
-  #:export (make-zstd-input-port
+  #:export (%default-compression-level
+
+            make-zstd-input-port
             call-with-zstd-input-port
 
             make-zstd-output-port
