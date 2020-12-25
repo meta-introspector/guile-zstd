@@ -20,7 +20,9 @@
   #:use-module (ice-9 binary-ports)
   #:use-module (rnrs bytevectors)
   #:use-module (system foreign)
-  #:use-module (ice-9 match))
+  #:use-module (ice-9 match)
+  #:export (make-zstd-input-port
+            make-zstd-output-port))
 
 ;;; Commentary:
 ;;;
@@ -148,3 +150,78 @@ resulting port is closed."
                                       ZSTD_C_CHECKSUM_FLAG
                                       (if checksum? 1 0))
   (make-custom-binary-output-port "zstd-output" write! #f #f close))
+
+
+;;;
+;;; Decompression.
+;;;
+
+(define stream-decompression-input-size
+  (zstd-procedure size_t "ZSTD_DStreamInSize" '()))
+
+(define stream-decompression-output-size
+  (zstd-procedure size_t "ZSTD_DStreamOutSize" '()))
+
+(define make-decompression-context
+  (let ((make (zstd-procedure '* "ZSTD_createDCtx" '()))
+        (free (delay (dynamic-func "ZSTD_freeDCtx" %zstd-library))))
+    (lambda ()
+      (let ((context (make)))
+        (set-pointer-finalizer! context (force free))
+        context))))
+
+(define decompress!
+  (zstd-procedure size_t "ZSTD_decompressStream" '(* * *)))
+
+(define* (make-zstd-input-port port #:key (close? #t))
+  "Return an input port that decompresses data read from PORT.
+When CLOSE? is true, PORT is automatically closed when the resulting port is
+closed."
+  (define context
+    (make-decompression-context))
+
+  (define input-size (stream-decompression-input-size))
+  (define input-available 0)
+  (define input-buffer (make-bytevector input-size))
+
+  (define input-ptr (bytevector->pointer input-buffer))
+  (define input (make-c-struct %input-buffer-struct
+                               (list input-ptr input-size 0)))
+
+  (define eof? #f)
+
+  (define (read! bv start count)
+    (if (zero? input-available)
+        (if eof?
+            0
+            (begin
+              (set! input-available
+                (match (get-bytevector-n! port input-buffer 0 input-size)
+                  ((? eof-object?) 0)
+                  (n n)))
+              (set! input
+                (make-c-struct %input-buffer-struct
+                               (list input-ptr input-available 0)))
+              (when (zero? input-available)
+                (set! eof? #t))
+              (read! bv start count)))
+        (let* ((output-ptr (bytevector->pointer bv start))
+               (output (make-c-struct %output-buffer-struct
+                                      (list output-ptr count 0)))
+               (ret (decompress! context output input)))
+          (match (parse-c-struct input %input-buffer-struct)
+            ((_ size position)
+             (set! input-available (- size position))
+             (when (and eof? (zero? input-available) (not (zero? ret)))
+               (throw 'zstd-error 'decompress! "EOF before end of stream"))))
+          (match (parse-c-struct output %output-buffer-struct)
+            ((_ _ position)
+             (if (and (not eof?) (zero? position)) ;didn't read anything
+                 (read! bv start count)
+                 position))))))
+
+  (define (close)
+    (when close?
+      (close-port port)))
+
+  (make-custom-binary-input-port "zstd-input" read! #f #f close))
