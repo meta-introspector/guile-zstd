@@ -28,7 +28,10 @@
             call-with-zstd-input-port
 
             make-zstd-output-port
-            call-with-zstd-output-port))
+            call-with-zstd-output-port
+
+            error-code?
+            error-name))
 
 ;;; Commentary:
 ;;;
@@ -48,6 +51,24 @@
 
 (define %output-buffer-struct                     ;ZSTD_outBuffer_s
   %input-buffer-struct)
+
+(define error-code?
+  (let ((proc (zstd-procedure unsigned-int "ZSTD_isError" (list size_t))))
+    (lambda (err)
+      "Return true if ERR, an integer returned by a zstd function, denotes an
+error."
+      (not (zero? (proc err))))))
+
+(define error-name
+  (let ((proc (zstd-procedure '* "ZSTD_getErrorName" (list size_t))))
+    (lambda (err)
+      "Return the error name corresponding to ERR."
+      (pointer->string (proc err)))))
+
+
+;;;
+;;; Compression.
+;;;
 
 (define stream-compression-input-size
   (zstd-procedure size_t "ZSTD_CStreamInSize" '()))
@@ -118,6 +139,8 @@ resulting port is closed."
         (define remaining
           (compress! context output input mode))
 
+        (when (error-code? remaining)
+          (throw 'zstd-error 'compress! remaining))
         (match (parse-c-struct output %output-buffer-struct)
           ((_ _ position)
            (put-bytevector port output-buffer 0 position)))
@@ -226,6 +249,8 @@ closed."
                (output (make-c-struct %output-buffer-struct
                                       (list output-ptr count 0)))
                (ret (decompress! context output input)))
+          (when (error-code? ret)
+            (throw 'zstd-error 'decompress! ret))
           (match (parse-c-struct input %input-buffer-struct)
             ((_ size position)
              (set! input-available (- size position))

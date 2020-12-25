@@ -118,4 +118,17 @@
       (lambda args
         args))))
 
+(test-equal "corrupt compressed stream"
+  '(zstd-error decompress! "Restored data doesn't match checksum")
+  (let ((compressed (compressed-data (random-bytevector 7777))))
+    (bytevector-u8-set! compressed 42
+                        (logxor (bytevector-u8-ref compressed 42)
+                                #xff))
+    (catch 'zstd-error
+      (lambda ()
+        (call-with-zstd-input-port (open-bytevector-input-port compressed)
+          get-bytevector-all))
+      (lambda (key proc error . _)
+        (list key proc (error-name error))))))
+
 (test-end)
