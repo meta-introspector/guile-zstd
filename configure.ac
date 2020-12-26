@@ -3,7 +3,7 @@
 
 AC_PREREQ([2.69])
 
-AC_INIT([Guile-zstd], [0.1], [guile-user@gnu.org], [guile-zstd],
+AC_INIT([Guile-zstd], [0.1.0], [guile-user@gnu.org], [guile-zstd],
   [https://notabug.org/guile-zstd/guile-zstd])
 AC_CONFIG_SRCDIR([zstd.scm])
 AC_CONFIG_AUX_DIR([build-aux])
