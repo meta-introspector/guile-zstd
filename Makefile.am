@@ -41,6 +41,7 @@ SUFFIXES = .scm .go
 BUILT_SOURCES = zstd/config.scm
 
 TESTS = tests/zstd.scm
+EXTRA_DIST += $(TESTS) build-aux/test-driver.scm
 
 TEST_EXTENSIONS = .scm
 SCM_LOG_DRIVER =                                \
