@@ -18,7 +18,7 @@
 
 nodist_noinst_SCRIPTS = pre-inst-env
 
-EXTRA_DIST = zstd.scm
+EXTRA_DIST = zstd.scm guix.scm
 SOURCES = zstd.scm zstd/config.scm
 GOBJECTS = $(SOURCES:%.scm=%.go)
 
