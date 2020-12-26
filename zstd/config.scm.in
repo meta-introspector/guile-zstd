@@ -20,4 +20,7 @@
   #:export (%zstd-library-file-name))
 
 (define %zstd-library-file-name
-  "@ZSTD_LIBDIR@/libzstd.so.1")
+  ;; 'dynamic-link' in Guile >= 3.0.2 first looks up file names literally
+  ;; (hence ".so.1"), which is not the case with older versions of Guile.
+  (cond-expand ((not guile-3) "@ZSTD_LIBDIR@/libzstd")
+               (else          "@ZSTD_LIBDIR@/libzstd.so.1")))
