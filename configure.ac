@@ -18,7 +18,7 @@ dnl Search for 'guile' and 'guild'.  This macro defines
 dnl 'GUILE_EFFECTIVE_VERSION'.
 GUILE_PKG([3.0 2.2 2.0])
 GUILE_PROGS
-GUILE_SITE_DIR
+
 if test "x$GUILD" = "x"; then
    AC_MSG_ERROR(['guild' binary not found; please check your GNU Guile installation.])
 fi
