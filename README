@@ -1,17 +1,83 @@
-Guile-zstd: GNU Guile bindings to the zstd compression library
-==============================================================
+#+TITLE: Guile-zstd: GNU Guile bindings to the zstd compression library
 
-This directory contains Guile bindings to the zstd compression library:
+This directory contains bindings to the zstd compression library for
+GNU Guile 3.0, 2.2, and 2.0:
 
   https://facebook.github.io/zstd
 
+Zstd (or “zstandard”) offers high compression ratios (close to lzip or
+xz) and a very high decompression throughput.
+
+These bindings provide a high-level port interface for in-process
+compression and decompression.  Here’s how you would compress a file and
+store its result on disk:
+
+#+begin_src scheme
+  (use-modules (zstd)
+	       (rnrs io ports))
+
+  ;; Create a compressed archive.
+  (call-with-output-file "compressed.zst"
+    (lambda (port)
+      (call-with-zstd-output-port port
+	(lambda (port)
+	  (define data
+	    ;; Read the input file in memory.
+	    (call-with-input-file "input-file.txt"
+	      get-bytevector-all))
+
+	  ;; Write data to PORT.
+	  (put-bytevector port data)))))
+#+end_src
+
+Decompression works similarly:
+
+#+begin_src scheme
+  (call-with-input-file "compressed.zst"
+    (lambda (port)
+      (call-with-zstd-input-port port
+	(lambda (port)
+	  ;; Read decompressed data from PORT.
+	  ...))))
+#+end_src
+
+* Installing
+
+With GNU Guix, you can install Guile-zstd straight of this source tree
+by running:
+
+#+begin_src sh
+  guix package -f guix.scm
+#+end_src
+
+See the =INSTALL= file for instructions on how to build from source
+manually.
+
+* Hacking
+
+Using GNU Guix, you can enter a development environment by running:
+
+#+begin_src sh
+  guix environment -CP -l guix.scm
+#+end_src
+
 You can authenticate the code in this repository by running:
 
-  guix git authenticate \
-    afe022f7a1de5517dfeae66705dc21d94f4d2b0a \
+#+begin_src sh
+  guix git authenticate				\
+    afe022f7a1de5517dfeae66705dc21d94f4d2b0a	\
     3CE464558A84FDC69DB40CFB090B11993D9AEBB5
+#+end_src
 
 The command silently exits with zero on success, and errors out
 otherwise.  We recommend invoking it from ‘.git/hooks/pre-push’.
 
+* Reporting Bugs
+
 Please report bugs to <guile-user@gnu.org>.
+
+
+Local Variables:
+mode: org
+ispell-local-dictionary: "american"
+End:
