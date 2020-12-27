@@ -5,8 +5,9 @@ GNU Guile 3.0, 2.2, and 2.0:
 
   https://facebook.github.io/zstd
 
-Zstd (or “zstandard”) offers high compression ratios (close to lzip or
-xz) and a very high decompression throughput.
+Zstd (or “zstandard”) offers relatively high compression ratios
+(typically better than gzip, not as good as lzip or xz) and a high
+decompression throughput (noticeably higher than lzip or gzip).
 
 These bindings provide a high-level port interface for in-process
 compression and decompression.  Here’s how you would compress a file and
