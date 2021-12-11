@@ -50,7 +50,8 @@
   (let-values (((port get) (open-bytevector-output-port)))
     (call-with-zstd-output-port port
       (lambda (port)
-        (put-bytevector port data)))
+        (put-bytevector port data))
+      #:level level)
     (get)))
 
 (define* (compress-and-decompress data
