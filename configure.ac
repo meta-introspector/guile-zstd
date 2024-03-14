@@ -6,6 +6,7 @@ AC_PREREQ([2.69])
 AC_INIT([Guile-zstd], [0.1.0], [guile-user@gnu.org], [guile-zstd],
   [https://notabug.org/guile-zstd/guile-zstd])
 AC_CONFIG_SRCDIR([zstd.scm])
+AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([1.12 gnu silent-rules subdir-objects color-tests parallel-tests -Wno-portability])
 AM_SILENT_RULES([yes])
